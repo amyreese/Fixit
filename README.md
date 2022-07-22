@@ -19,7 +19,7 @@ monorepo.
 ## Structure
 
 Configuration at any given path must be located either in the standardized
-`pyproject.toml` file, or a separate `fixup.toml` file. To follow PEP 518, everything
+`pyproject.toml` file, or a separate `fixit.toml` file. To follow PEP 518, everything
 in `pyproject.toml` must be under the `tool.<name>` table, which would be `tool.fixit`,
 so we should use that same table name in `fixit.toml` for consistency.
 
