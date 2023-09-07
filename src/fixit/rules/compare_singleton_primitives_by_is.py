@@ -37,6 +37,8 @@ class CompareSingletonPrimitivesByIs(LintRule):
         Valid("False is x"),
         Valid("x == 2"),
         Valid("2 != x"),
+        Valid('"True" == "True"'),
+        Valid('"True" != "False".lower()'),
     ]
     INVALID = [
         Invalid(
@@ -69,12 +71,10 @@ class CompareSingletonPrimitivesByIs(LintRule):
         ),
     ]
 
-    QUALIFIED_SINGLETON_PRIMITIVES: FrozenSet[QualifiedName] = frozenset(
-        {
-            QualifiedName(name=f"builtins.{name}", source=QualifiedNameSource.BUILTIN)
-            for name in ("True", "False", "None")
-        }
-    )
+    SINGLETON_PRIMITIVES: FrozenSet[str] = frozenset(["True", "False", "None"])
+
+    def is_singleton(self, node: cst.BaseExpression):
+        return isinstance(node, cst.Name) and node.value in self.SINGLETON_PRIMITIVES
 
     def visit_Comparison(self, node: cst.Comparison) -> None:
         # Initialize the needs_report flag as False to begin with
@@ -84,12 +84,7 @@ class CompareSingletonPrimitivesByIs(LintRule):
         for target in node.comparisons:
             operator, right_comp = target.operator, target.comparator
             if isinstance(operator, (cst.Equal, cst.NotEqual)) and (
-                not self.QUALIFIED_SINGLETON_PRIMITIVES.isdisjoint(
-                    self.get_metadata(QualifiedNameProvider, left_comp, set())
-                )
-                or not self.QUALIFIED_SINGLETON_PRIMITIVES.isdisjoint(
-                    self.get_metadata(QualifiedNameProvider, right_comp, set())
-                )
+                self.is_singleton(left_comp) or self.is_singleton(right_comp)
             ):
                 needs_report = True
                 altered_comparisons.append(
