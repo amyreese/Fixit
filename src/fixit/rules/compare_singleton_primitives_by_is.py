@@ -71,9 +71,24 @@ class CompareSingletonPrimitivesByIs(LintRule):
         ),
     ]
 
+    QUALIFIED_SINGLETON_PRIMITIVES: FrozenSet[QualifiedName] = frozenset(
+        {
+            QualifiedName(name=f"builtins.{name}", source=QualifiedNameSource.BUILTIN)
+            for name in ("True", "False", "None")
+        }
+    )
     SINGLETON_PRIMITIVES: FrozenSet[str] = frozenset(["True", "False", "None"])
 
     def is_singleton(self, node: cst.BaseExpression):
+        qn = self.get_metadata(QualifiedNameProvider, node, set())
+        print("\n----")
+        print(qn)
+        print(self.QUALIFIED_SINGLETON_PRIMITIVES)
+        print(qn in self.QUALIFIED_SINGLETON_PRIMITIVES)
+        print(qn.issubset(self.QUALIFIED_SINGLETON_PRIMITIVES))
+        print("----")
+        return qn and qn < self.QUALIFIED_SINGLETON_PRIMITIVES
+        # return isinstance(node, cst.Name) and qn in self.QUALIFIED_SINGLETON_PRIMITIVES
         return isinstance(node, cst.Name) and node.value in self.SINGLETON_PRIMITIVES
 
     def visit_Comparison(self, node: cst.Comparison) -> None:
@@ -83,6 +98,12 @@ class CompareSingletonPrimitivesByIs(LintRule):
         altered_comparisons = []
         for target in node.comparisons:
             operator, right_comp = target.operator, target.comparator
+            print("\n++++")
+            print(left_comp)
+            print(self.get_metadata(QualifiedNameProvider, left_comp))
+            print(right_comp)
+            print(self.get_metadata(QualifiedNameProvider, right_comp))
+            print("++++")
             if isinstance(operator, (cst.Equal, cst.NotEqual)) and (
                 self.is_singleton(left_comp) or self.is_singleton(right_comp)
             ):
