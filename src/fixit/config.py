@@ -64,7 +64,7 @@ class ConfigError(ValueError):
         self.config = config
 
 
-class CollectionError(RuntimeError):
+class CollectionError(Exception):
     def __init__(self, msg: str, rule: QualifiedRule):
         super().__init__(msg)
         self.rule = rule
@@ -385,7 +385,7 @@ def merge_configs(
     """
 
     config: RawConfig
-    enable_root_import: Union[bool, Path] = Config.enable_root_import
+    enable_root_import: Union[bool, Path] = False
     enable_rules: Set[QualifiedRule] = {QualifiedRule("fixit.rules")}
     disable_rules: Set[QualifiedRule] = set()
     rule_options: RuleOptionsTable = {}

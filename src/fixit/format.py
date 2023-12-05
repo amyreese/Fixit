@@ -10,7 +10,7 @@ NOTE: be sure to update docs/guide/configuration.rst to include any new formatte
 """
 
 from pathlib import Path
-from typing import Dict, Optional, Type
+from typing import ClassVar, Dict, Optional, Type
 
 from libcst import Module
 
@@ -24,7 +24,7 @@ class Formatter:
     Fixit post-transform code style and formatting interface.
     """
 
-    STYLE: str
+    STYLE: ClassVar[str]
     """
     Short name to identify this formatting style in user configuration.
     For example: ``"black"``.

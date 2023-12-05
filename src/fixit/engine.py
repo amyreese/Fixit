@@ -48,6 +48,21 @@ def diff_violation(path: Path, module: Module, violation: LintViolation) -> str:
     )
 
 
+class ReplacementTransformer(CSTTransformer):
+    def __init__(self, replacements: Mapping[CSTNode, NodeReplacement]) -> None:
+        self._replacements = replacements
+
+    def on_visit(self, node: CSTNode) -> bool:
+        # don't visit children if we're going to replace the parent anyways
+        return node not in self._replacements
+
+    def on_leave(self, node: CSTNode, updated: CSTNode) -> NodeReplacement:
+        if node in self._replacements:
+            new = self._replacements[node]
+            return new
+        return updated
+
+
 class LintRunner:
     def __init__(self, path: Path, source: FileContent) -> None:
         self.path = path
@@ -121,17 +136,5 @@ class LintRunner:
         Apply any autofixes to the module, and return the resulting source code.
         """
         replacements = {v.node: v.replacement for v in violations if v.replacement}
-
-        class ReplacementTransformer(CSTTransformer):
-            def on_visit(self, node: CSTNode) -> bool:
-                # don't visit children if we're going to replace the parent anyways
-                return node not in replacements
-
-            def on_leave(self, node: CSTNode, updated: CSTNode) -> NodeReplacement:
-                if node in replacements:
-                    new = replacements[node]
-                    return new
-                return updated
-
-        updated: Module = self.module.visit(ReplacementTransformer())
+        updated: Module = self.module.visit(ReplacementTransformer(replacements))
         return updated

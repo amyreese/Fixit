@@ -62,10 +62,10 @@ class LintRule(BatchableCSTVisitor):
     Required LibCST metadata providers
     """
 
-    TAGS: Set[str] = set()
+    TAGS: ClassVar[Set[str]] = set()
     "Arbitrary classification tags for use in configuration/selection"
 
-    PYTHON_VERSION: str = ""
+    PYTHON_VERSION: ClassVar[str] = ""
     """
     Compatible target Python versions, in `PEP 440 version specifier`__ format.
 
@@ -78,7 +78,7 @@ class LintRule(BatchableCSTVisitor):
     INVALID: ClassVar[List[Union[str, Invalid]]]
     "Test cases that are expected to produce errors, with optional replacements"
 
-    AUTOFIX = False  # set by __subclass_init__
+    AUTOFIX: ClassVar[bool] = False  # set by __subclass_init__
     """
     Whether the lint rule contains an autofix.
 
@@ -108,7 +108,7 @@ class LintRule(BatchableCSTVisitor):
                 return
 
     def __str__(self) -> str:
-        return f"{self.__class__.__module__}:{self.__class__.__name__}"
+        return f"...:{self.__class__.__name__}"  # XXX: don't commit
 
     _visit_hook: Optional[VisitHook] = None
 
