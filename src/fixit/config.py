@@ -39,7 +39,7 @@ from .ftypes import (
     is_collection,
     is_sequence,
     Options,
-    OutputFormatType,
+    OutputFormat,
     OutputFormatTypeInput,
     QualifiedRule,
     QualifiedRuleRegex,
@@ -61,7 +61,7 @@ FIXIT_LOCAL_MODULE = "fixit.local"
 CWD_CONFIG_KEYS = ("output-format", "output-template")
 
 
-output_formats_templates: Dict[OutputFormatType, str] = {
+output_formats_templates: Dict[OutputFormat, str] = {
     "fixit": "{path}@{start_line}:{start_col} {rule_name}: {message}",
     "vscode": "{path}:{start_line}:{start_col} {rule_name}: {message}",
 }

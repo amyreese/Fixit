@@ -6,6 +6,7 @@
 import platform
 import re
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 from typing import (
     Any,
@@ -16,7 +17,6 @@ from typing import (
     Dict,
     Iterable,
     List,
-    Literal,
     Optional,
     Sequence,
     Tuple,
@@ -50,9 +50,26 @@ Timings = Dict[str, int]
 TimingsHook = Callable[[Timings], None]
 
 VisitorMethod = Callable[[CSTNode], None]
+<<<<<<< HEAD
 VisitHook = Callable[[str], ContextManager]
 OutputFormatType = Literal["fixit", "vscode", "json"]
 OutputFormatTypeInput = Literal[OutputFormatType, "custom"]
+||||||| parent of b5607ac (rename types, move to enum)
+
+VisitHook = Callable[[str], ContextManager[None]]
+OutputFormatType = Literal["fixit", "vscode", "json"]
+OutputFormatTypeInput = Literal[OutputFormatType, "custom"]
+=======
+
+VisitHook = Callable[[str], ContextManager[None]]
+
+
+class OutputFormat(str, Enum):
+    custom = "custom"
+    fixit = "fixit"
+    json = "json"
+    vscode = "vscode"
+>>>>>>> b5607ac (rename types, move to enum)
 
 Version
 
@@ -239,7 +256,7 @@ class Config:
 
 @dataclass
 class CwdConfig:
-    output_format: OutputFormatTypeInput = "fixit"
+    output_format: OutputFormat = "fixit"
     output_template: str = ""
 
     def __post_init__(self) -> None:
