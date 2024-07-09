@@ -22,7 +22,7 @@ from .ftypes import (
     FileContent,
     LintViolation,
     Options,
-    OutputFormatTypeInput,
+    OutputFormat,
     Result,
     STDIN,
 )
@@ -30,13 +30,37 @@ from .ftypes import (
 LOG = logging.getLogger(__name__)
 
 
+def format_result(path: Path, result: Result, *, options: Options) -> str:
+    rule_name = result.violation.rule_name
+    start_line = result.violation.range.start.line
+    start_col = result.violation.range.start.column
+    message = result.violation.message
+    if result.violation.autofixable:
+        message += " (has autofix)"
+
+    fmt = options.output_format
+    if fmt == OutputFormat.fixit:
+        return f"{path}@{start_line}:{start_col} {rule_name}: {message}"
+    elif fmt == OutputFormat.vscode:
+        return f"{path}:{start_line}:{start_col} {rule_name}: {message}"
+    elif fmt == OutputFormat.custom:
+        return options.output_template.format(
+            path=path,
+            message=message,
+            rule_name=rule_name,
+            start_col=start_col,
+            start_line=start_line,
+        )
+    else:
+        raise NotImplementedError(f"output-format = {fmt!r}")
+
+
 def print_result(
     result: Result,
     *,
     show_diff: bool = False,
     stderr: bool = False,
-    output_format_type: OutputFormatTypeInput = "fixit",
-    output_template: str = output_formats_templates["fixit"],
+    options: Options = Options(),
 ) -> int:
     """
     Print linting results in a simple format designed for human eyes.
@@ -52,27 +76,10 @@ def print_result(
     except ValueError:
         pass
 
-    if output_format_type != "custom":
-        output_template = output_formats_templates[output_format_type]
-
     if result.violation:
-        rule_name = result.violation.rule_name
-        start_line = result.violation.range.start.line
-        start_col = result.violation.range.start.column
-        message = result.violation.message
-        if result.violation.autofixable:
-            message += " (has autofix)"
-        click.secho(
-            output_template.format(
-                path=path,
-                start_line=start_line,
-                start_col=start_col,
-                rule_name=rule_name,
-                message=message,
-            ),
-            fg="yellow",
-            err=stderr,
-        )
+        line = format_result(path, result, options)
+        click.secho(line, fg="yellow", err=stderr)
+
         if show_diff and result.violation.diff:
             echo_color_precomputed_diff(result.violation.diff)
         return True

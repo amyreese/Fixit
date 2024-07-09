@@ -35,7 +35,6 @@ from packaging.version import InvalidVersion, Version
 from .format import FORMAT_STYLES
 from .ftypes import (
     Config,
-    CwdConfig,
     is_collection,
     is_sequence,
     Options,
@@ -58,13 +57,6 @@ else:
 
 FIXIT_CONFIG_FILENAMES = ("fixit.toml", ".fixit.toml", "pyproject.toml")
 FIXIT_LOCAL_MODULE = "fixit.local"
-CWD_CONFIG_KEYS = ("output-format", "output-template")
-
-
-output_formats_templates: Dict[OutputFormat, str] = {
-    "fixit": "{path}@{start_line}:{start_col} {rule_name}: {message}",
-    "vscode": "{path}:{start_line}:{start_col} {rule_name}: {message}",
-}
 
 
 log = logging.getLogger(__name__)
@@ -414,6 +406,8 @@ def merge_configs(
     rule_options: RuleOptionsTable = {}
     target_python_version: Optional[Version] = Version(platform.python_version())
     target_formatter: Optional[str] = None
+    output_format: OutputFormat = OutputFormat.fixit
+    output_template: str = ""
 
     def process_subpath(
         subpath: Path,
@@ -495,6 +489,17 @@ def merge_configs(
             else:
                 enable_root_import = True
 
+        if value := data.pop("output-format", ""):
+            try:
+                output_format = OutputFormat(value)
+            except ValueError as e:
+                raise ConfigError(
+                    "output-format: unknown value {value!r}", config=config
+                )
+
+        if value := data.pop("output-template", ""):
+            output_template = value
+
         process_subpath(
             config.path.parent,
             enable=get_sequence(config, "enable"),
@@ -525,8 +530,7 @@ def merge_configs(
             )
 
         for key in data.keys():
-            if key not in CWD_CONFIG_KEYS:
-                log.warning("unknown configuration option %r", key)
+            log.warning("unknown configuration option %r", key)
 
     return Config(
         path=path,
@@ -537,6 +541,8 @@ def merge_configs(
         options=rule_options,
         python_version=target_python_version,
         formatter=target_formatter,
+        output_format=output_format,
+        output_template=output_template,
     )
 
 

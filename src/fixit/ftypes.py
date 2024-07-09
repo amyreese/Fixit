@@ -50,17 +50,6 @@ Timings = Dict[str, int]
 TimingsHook = Callable[[Timings], None]
 
 VisitorMethod = Callable[[CSTNode], None]
-<<<<<<< HEAD
-VisitHook = Callable[[str], ContextManager]
-OutputFormatType = Literal["fixit", "vscode", "json"]
-OutputFormatTypeInput = Literal[OutputFormatType, "custom"]
-||||||| parent of b5607ac (rename types, move to enum)
-
-VisitHook = Callable[[str], ContextManager[None]]
-OutputFormatType = Literal["fixit", "vscode", "json"]
-OutputFormatTypeInput = Literal[OutputFormatType, "custom"]
-=======
-
 VisitHook = Callable[[str], ContextManager[None]]
 
 
@@ -69,9 +58,12 @@ class OutputFormat(str, Enum):
     fixit = "fixit"
     json = "json"
     vscode = "vscode"
->>>>>>> b5607ac (rename types, move to enum)
 
-Version
+
+OUTPUT_FORMATS: Dict[OutputFormat, str] = {
+    OutputFormat.fixit: "{path}@{start_line}:{start_col} {rule_name}: {message}",
+    OutputFormat.vscode: "{path}:{start_line}:{start_col} {rule_name}: {message}",
+}
 
 
 @dataclass(frozen=True)
@@ -203,8 +195,8 @@ class Options:
     config_file: Optional[Path]
     tags: Optional[Tags] = None
     rules: Sequence[QualifiedRule] = ()
-    output_format: Optional[OutputFormatTypeInput] = None
-    output_template: Optional[str] = None
+    output_format: OutputFormat = OutputFormat.fixit
+    output_template: str = ""
 
 
 @dataclass
@@ -247,22 +239,13 @@ class Config:
     # post-run processing
     formatter: Optional[str] = None
 
-    def __post_init__(self) -> None:
-        from .config import DEFAULT_OUTPUT_FORMAT
-
-        self.path = self.path.resolve()
-        self.root = self.root.resolve()
-
-
-@dataclass
-class CwdConfig:
-    output_format: OutputFormat = "fixit"
+    # output formatting options
+    output_format: OutputFormat = OutputFormat.fixit
     output_template: str = ""
 
     def __post_init__(self) -> None:
-        from .config import output_formats_templates
-
-        self.output_template = output_formats_templates["fixit"]
+        self.path = self.path.resolve()
+        self.root = self.root.resolve()
 
 
 @dataclass
